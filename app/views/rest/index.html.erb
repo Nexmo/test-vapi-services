@@ -1,0 +1,6 @@
+<h1>REST API Start and Stop Recording</h1>
+
+<%= form_with :url => '/record', :method => 'post' do |f| %>
+  <%= f.select :record, ['start', 'stop']%>
+  <%= f.submit 'Submit' %>
+<% end %>
