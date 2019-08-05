@@ -19,7 +19,7 @@
 
 /public/assets
 .byebug_history
-./private.key
+/private.key
 
 # Ignore master key for decrypting credentials and more.
 /config/master.key

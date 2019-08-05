@@ -31,7 +31,7 @@ class RestController < ApplicationController
   end
 
   def record
-    params[:record] == 'start' ? start_recording(@@conversation_uuid) : stop_recording(@@conversation_uuid)
+    params[:record] == 'start' ? recording_call(@@conversation_uuid, 'start') : recording_call(@@conversation_uuid, 'stop')
     head :no_content
   end
 
@@ -44,7 +44,7 @@ class RestController < ApplicationController
 
   private
 
-  def start_recording(conv_uuid) 
+  def recording_call(conv_uuid, action) 
     require 'net/https'
     require 'json'
 
@@ -63,42 +63,14 @@ class RestController < ApplicationController
           'Authorization' => "Bearer #{token}"
         })
         req.body = {
-          'action' => 'start',
+          'action' => action,
           'eventUrl' => 'http://bengreenberg.ngrok.io/webhooks/event',
           'eventMethod' => 'POST',
-          'split' => 'conversation'
+          'split' => 'conversation',
+          'format' => 'wav'
         }.to_json
         res = http.request(req)
-        res.code == '204' ? return_msg = "Successful HTTP Status #{res.code}" : return_msg = "Response #{res.body}" 
-        puts return_msg
-        puts JSON.parse(res.body) unless res.code == '204'
-    rescue => e
-        puts "failed #{e}"
-    end
-  end
-
-  def stop_recording(conv_uuid) 
-    require 'net/https'
-    require 'json'
-
-    claims = {
-      application_id: Rails.application.credentials.nexmo[:application_id]
-    }
-    private_key = File.read(Rails.application.credentials.nexmo[:private_key])
-    token = Nexmo::JWT.generate(claims, private_key)
-    begin
-        uri = URI("https://api.nexmo.com/v1/conversations/#{conv_uuid}/record")
-        http = Net::HTTP.new(uri.host, uri.port)
-        http.use_ssl = true
-        req = Net::HTTP::Put.new(uri.path, {
-          'Content-Type' =>'application/json',  
-          'Authorization' => "Bearer #{token}"
-        })
-        req.body = {
-          'action' => 'stop',
-        }.to_json
-        res = http.request(req)
-        res.code == '204' ? return_msg = "Successful HTTP Status #{res.code}" : return_msg = "Response #{res.body}" 
+        res.code == '204' ? return_msg = "Successful HTTP Status #{res.code}" : return_msg = "Response #{res.code}: #{res.body}" 
         puts return_msg
         puts JSON.parse(res.body) unless res.code == '204'
     rescue => e
